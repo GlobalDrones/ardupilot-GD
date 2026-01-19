@@ -4163,6 +4163,8 @@ void GCS_MAVLINK::handle_rc_channels_override(const mavlink_message_t &msg)
         return; // Only accept control from our gcs
     }
 
+    gcs().send_text(MAV_SEVERITY_INFO, "RC Override ativo");
+
     const uint32_t tnow = AP_HAL::millis();
 
     mavlink_rc_channels_override_t packet;
