@@ -4159,14 +4159,25 @@ void GCS_MAVLINK::handle_command_ack(const mavlink_message_t &msg)
 // control of switch position and RC PWM values.
 void GCS_MAVLINK::handle_rc_channels_override(const mavlink_message_t &msg)
 {
-    if (!gcs().sysid_is_gcs(msg.sysid)) {
+    if (!gcs().sysid_is_gcs(msg.sysid) || msg.sysid < 250) { //Aceita System IDs acima de 250 apenas
         return; // Only accept control from our gcs
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO, "RC Override ativo");
-
     const uint32_t tnow = AP_HAL::millis();
 
+    static uint32_t last_override_msg_ms = 0;
+    const uint32_t delta = tnow - last_override_msg_ms;
+
+    if (delta > 5000) { 
+        // Envia o texto formatado: "RC Override: Ativo [ID: 255]"
+        gcs().send_text(MAV_SEVERITY_INFO, "RC Override: Ativo [ID: %u]", msg.sysid);
+        
+        last_override_msg_ms = tnow;
+    }
+    else {
+        // Printa o SysID e o tempo decorrido desde a última mensagem válida
+        //gcs().send_text(MAV_SEVERITY_INFO, "Timer em: %u ms | ID: %u", delta, msg.sysid);
+    }
     mavlink_rc_channels_override_t packet;
     mavlink_msg_rc_channels_override_decode(&msg, &packet);
 
